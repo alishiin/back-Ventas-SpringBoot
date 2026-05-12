@@ -44,7 +44,10 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_KEY }}
           script: |
-            # Entramos a la carpeta del proyecto (si clonaste el repo)
-            # o simplemente ejecutamos el pull si tienes un docker-compose.yml ahí
-            docker compose pull
-            docker compose up -d
+            # Forzamos la descarga de la nueva imagen
+            sudo docker pull ${{ secrets.DOCKER_HUB_REPO_BACKEND_VENTAS }}:latest
+            # Detenemos y borramos el contenedor viejo si existe
+            sudo docker stop back-ventas  true
+            sudo docker rm back-ventas  true
+            # Corremos el nuevo con los puertos correctos (8082 para ventas)
+            sudo docker run -d --name back-ventas -p 8082:8080 ${{ secrets.DOCKER_HUB_REPO_BACKEND_VENTAS }}:latest
