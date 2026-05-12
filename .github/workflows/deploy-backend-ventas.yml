@@ -8,7 +8,6 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -34,5 +33,18 @@ jobs:
           cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_REPO_BACKEND_VENTAS }}:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_REPO_BACKEND_VENTAS }}:buildcache,mode=max
 
-      - name: Image pushed successfully
-        run: echo "✅ Backend Ventas image pushed to Docker Hub as alishiin/back-ventas-springboot:latest"
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST_BACKEND_VENTAS }} # IP Pública de la EC2 de Ventas
+          username: ubuntu
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            # Entramos a la carpeta del proyecto (si clonaste el repo)
+            # o simplemente ejecutamos el pull si tienes un docker-compose.yml ahí
+            docker compose pull
+            docker compose up -d
